@@ -1,0 +1,88 @@
+task: HumanoidEgoImg
+num_envs: 256
+# num_envs: 2048
+env_spacing: 5
+episode_length: 300
+isFlagrun: False
+enable_debug_vis: False
+motion_file: ""
+
+max_len: 450
+fut_tracks: False
+fut_tracks_dropout: False
+obs_v: 6
+auto_pmcp: False
+auto_pmcp_soft: True
+eval_full: False
+
+cycle_motion: True
+strict_eval: True
+img_dim: [2, 160, 120]
+img_latent_dim : 1024
+pretrain: False
+partial_running_mean: True
+use_resnet_gn: True
+use_siamese: True
+
+real_weight: True
+kp_scale: 1
+power_reward: True
+
+#### Distilliation config
+kin_loss: True
+distill: True
+save_kin_info: True
+distill_z_model: True
+z_read: False
+distill_model_config:
+  embedding_norm: 2
+  embedding_size: 128
+  fut_tracks_dropout: False
+  fut_tracks: True
+  trajSampleTimestepInv: 5
+  numTrajSamples: 10
+  z_activation: "silu"
+  z_type: "sphere"
+  root_height_obs: True
+
+models: ['output/dgx/phc_z_fut_aria_1/Humanoid_00017000.pth']
+
+masterfoot: False
+freeze_toe: false
+freeze_hand: False
+
+
+shape_resampling_interval: 100
+
+control_mode: "isaac_pd"
+pdControl: True
+power_scale: 1.0
+controlFrequencyInv: 2 # 30 Hz
+stateInit: "Random"  
+hybridInitProb: 0.5
+numAMPObsSteps: 10
+
+local_root_obs: True
+root_height_obs: True
+key_bodies: ["R_Ankle", "L_Ankle", "R_Wrist",  "L_Wrist"]
+contact_bodies: ["R_Ankle", "L_Ankle", "R_Toe", "L_Toe"]
+# reset_bodies: [ "L_Ankle", "R_Ankle",smpl_aria_distill_3_2 'Head',  'L_Wrist', 'R_Wrist']
+reset_bodies: ['Head']
+trackBodies: ["Head"]
+terminationHeight: 0.15
+enableEarlyTermination: True
+terminationDistance: 0.25
+
+numTrajSamples: 10
+trajSampleTimestep: 0.5
+speedMin: 0.0
+speedMax: 3.0
+accelMax: 2.0
+sharpTurnProb: 0.02
+
+enableTaskObs: True
+
+plane:
+  staticFriction: 1.0
+  dynamicFriction: 1.0
+  restitution: 0.0
