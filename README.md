@@ -12,6 +12,12 @@ Official implementation of CVPR 2024 highlight paper: "Real-Time Simulated Avata
 </div>
 
 
+
+## Data 
+(coming soon)
+
+## Evaluation 
+
 Evaluate Aria models: 
 
 ```
