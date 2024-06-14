@@ -5,7 +5,14 @@
 Official implementation of CVPR 2024 highlight paper: "Real-Time Simulated Avatar from Head-Mounted Sensors".
 
 
+[[paper]](https://arxiv.org/abs/2403.06862) [[website]](https://zhengyiluo.github.io/SimXR/) 
 
+<div float="center">
+  <img src="assets/simxr_teaser.gif" />
+</div>
+
+
+Evaluate Aria models: 
 
 ```
 
