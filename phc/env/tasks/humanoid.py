@@ -247,6 +247,10 @@ class Humanoid(BaseTask):
         self.humanoid_type = cfg.robot.humanoid_type
         if self.humanoid_type in ["smpl", "smplh", "smplx"]:
             self.load_smpl_configs(cfg)
+            
+        elif self.humanoid_type in ["quest"]:
+            self.load_quest_configs(cfg)
+            
         else:
             raise NotImplementedError
             
@@ -425,6 +429,50 @@ class Humanoid(BaseTask):
         self.right_lower_indexes = [idx for idx , name in enumerate(self._dof_names) if name.startswith("R") and name[2:] in ["Hip", "Knee", "Ankle", "Toe"]]
         
         self._load_amass_gender_betas()
+        
+    def load_quest_configs(self, cfg):
+        self.load_common_humanoid_configs(cfg)
+        self._real_weight = True
+        self._has_upright_start = cfg["env"].get("has_upright_start", False)
+        
+        disc_idxes = []
+        self._body_names_orig = [
+            'b_root',
+            'b_spine0','b_spine1','b_spine2','b_spine3','b_neck0','b_head',
+            'b_l_shoulder','p_l_scap','b_l_arm','b_l_forearm','b_l_wrist_twist','b_l_wrist',
+            'b_r_shoulder','p_r_scap', 'b_r_arm', 'b_r_forearm', 'b_r_wrist_twist', 'b_r_wrist',
+            'b_l_upleg', 'b_l_leg', "b_l_foot_twist",
+            'b_r_upleg', 'b_r_leg', "b_r_foot_twist",
+        ]
+            
+        self.action_idx = np.arange((len(self._body_names_orig) -1) * 3)
+        _body_names_orig_copy = self._body_names_orig.copy()
+
+        self._full_track_bodies = _body_names_orig_copy
+        self._body_names = self._body_names_orig
+
+        self._dof_names = self._body_names[1:]
+        remove_names = ["b_l_foot_twist", 'b_l_talocrural', 'b_l_subtalar', 'b_l_transversetarsal', 'b_l_ball', "b_r_foot_twist", 'b_r_talocrural', 'b_r_subtalar', 'b_r_transversetarsal', 'b_r_ball']
+        self.limb_weight_group = [['b_root', 'b_spine0', 'b_spine1', 'b_spine2', 'b_spine3', 'b_neck0', 'b_head'], \
+                                        ['b_l_shoulder', 'p_l_scap', 'b_l_arm', 'b_l_forearm', 'b_l_wrist_twist', 'b_l_wrist',], \
+                                        ['b_r_shoulder', 'p_r_scap', 'b_r_arm', 'b_r_forearm', 'b_r_wrist_twist', 'b_r_wrist',], \
+                                        ['b_l_upleg', 'b_l_leg',"b_l_foot_twist",], \
+                                        ['b_r_upleg', 'b_r_leg', "b_r_foot_twist",]
+                                        ]
+
+        self.limb_weight_group = [[self._body_names.index(g) for g in group] for group in self.limb_weight_group]
+        _body_names_orig_copy = self._body_names_orig.copy()
+        
+        self._eval_bodies = _body_names_orig_copy
+
+        for idx, name in enumerate(self._dof_names):  # no removes yet
+            if not name in remove_names:
+                disc_idxes.append(np.arange(idx * 3, (idx + 1) * 3))
+
+        self.dof_subset = torch.from_numpy(np.concatenate(disc_idxes))
+
+        self.left_to_right_index = [0, 1, 2, 3, 4, 5, 6, 13, 14, 15, 16, 17, 18, 7, 8, 9, 10, 11, 12, 26, 27, 28, 29, 30, 31, 32, 19, 20, 21, 22, 23, 24, 25]
+        self.left_to_right_index_action = [0, 1, 2, 3, 4, 5, 12, 13, 14, 15, 16, 17, 6, 7, 8, 9, 10, 11, 25, 26, 27, 28, 29, 30, 31, 18, 19, 20, 21, 22, 23, 24]
 
     def _clear_recorded_states(self):
         del self.state_record
@@ -665,6 +713,27 @@ class Humanoid(BaseTask):
             if self.self_obs_v == 3:
                 self._num_self_obs += 6 * len(self.force_sensor_joints)
 
+        elif self.humanoid_type in ["quest"]:
+            self._dof_body_ids = np.arange(1, len(self._body_names))
+            self._dof_offsets = np.linspace(0, len(self._dof_names) * 3, len(self._body_names)).astype(int)
+            self._dof_obs_size = len(self._dof_names) * 6
+
+            self._dof_size = len(self._dof_names) * 3
+            self._num_actions = len(self._dof_names) * 3
+            # self._num_actions = len(self.action_idx)
+
+            if (ENABLE_MAX_COORD_OBS):
+                self._num_self_obs = 1 + len(self._body_names) * (3 + 6 + 3 + 3) - 3  # height + num_bodies * 15 (pos + vel + rot + ang_vel) - root_pos
+            else:
+                raise NotImplementedError()
+            
+            if self._has_shape_obs:
+                self._num_self_obs += 12
+
+            if self._has_limb_weight_obs:
+                self._num_self_obs += 10
+            if not self._root_height_obs:
+                self._num_self_obs -= 1
         else:
             print("Unsupported character config file: {s}".format(asset_file))
             assert (False)
@@ -733,7 +802,7 @@ class Humanoid(BaseTask):
         asset_root = self.cfg.robot.asset["assetRoot"]
         asset_file = self.cfg.robot.asset["assetFileName"]
         self.humanoid_masses = []
-
+        
         if (self.humanoid_type in ["smpl", "smplh", "smplx"]):
             self.humanoid_shapes = []
             self.humanoid_assets = []
@@ -837,7 +906,35 @@ class Humanoid(BaseTask):
                 self.humanoid_shapes = torch.tensor(np.array([gender_beta] * num_envs)).float().to(self.device)
                 self.humanoid_assets = [humanoid_asset] * num_envs
                 self.skeleton_trees = [sk_tree] * num_envs
+        elif (self.humanoid_type in ["quest"]):
+            self.humanoid_shapes = []
+            self.humanoid_assets = []
+            self.humanoid_limb_and_weights = []
+            self.skeleton_trees = []
+            asset_options = gymapi.AssetOptions()
+            asset_options.angular_damping = 0.01
+            asset_options.max_angular_velocity = 100.0
+            asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
+            asset_root = "./"
+            
+            gender_beta, asset_file_real = np.zeros(12), "phc/data/assets/mjcf/quest_humanoid.xml"
+            sk_tree = SkeletonTree.from_mjcf(asset_file_real)
 
+            humanoid_asset = self.gym.load_asset(self.sim, asset_root, asset_file_real, asset_options)
+            actuator_props = self.gym.get_asset_actuator_properties(humanoid_asset)
+            motor_efforts = [prop.motor_effort for prop in actuator_props]
+
+            # create force sensors at the feet
+            right_foot_idx = self.gym.find_asset_rigid_body_index(humanoid_asset, "right_foot")
+            left_foot_idx = self.gym.find_asset_rigid_body_index(humanoid_asset, "left_foot")
+            sensor_pose = gymapi.Transform()
+
+            self.gym.create_asset_force_sensor(humanoid_asset, right_foot_idx, sensor_pose)
+            self.gym.create_asset_force_sensor(humanoid_asset, left_foot_idx, sensor_pose)
+            self.humanoid_shapes = torch.tensor(np.array([gender_beta] * num_envs)).float().to(self.device)
+            self.humanoid_assets = [humanoid_asset] * num_envs
+            self.skeleton_trees = [sk_tree] * num_envs
+            
         else:
 
             asset_path = os.path.join(asset_root, asset_file)
@@ -1352,10 +1449,9 @@ class Humanoid(BaseTask):
         return
 
     def _build_key_body_ids_tensor(self, key_body_names):
-        if self.humanoid_type in ["smpl", "smplh", "smplx"] :
+        if self.humanoid_type in ["smpl", "smplh", "smplx", "quest"] :
             body_ids = [self._body_names.index(name) for name in key_body_names]
             body_ids = to_torch(body_ids, device=self.device, dtype=torch.long)
-
         else:
             env_ptr = self.envs[0]
             actor_handle = self.humanoid_handles[0]

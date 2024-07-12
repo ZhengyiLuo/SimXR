@@ -7,7 +7,7 @@ import torch
 import numpy as np
 import phc.env.tasks.humanoid_im as humanoid_im
 from phc.utils.motion_lib_base import local_rotation_to_dof_vel
-# from phc.utils.motion_lib_mmt_img import  MotionLibMMTImg
+from phc.utils.motion_lib_quest_img import  MotionLibQuestImg
 from phc.utils.motion_lib_smpl_img import  MotionLibSMPLImg
 from phc.env.tasks.humanoid_amp import remove_base_rot
 
@@ -162,8 +162,8 @@ class HumanoidEgoImg(humanoid_im.HumanoidIm):
         load_heatmap = self.use_unrealego or self.use_visibility_branch
         load_mono = len(self.img_dim) > 1 or not self.headless
         
-        if self.humanoid_type in ["mmt"]:
-            self._motion_lib = MotionLibMMTImg(motion_file=motion_train_file,  device=self.device, min_length=self._min_motion_len, mmt_v = self.mmt_v, fix_height= self.height_fix_mode, load_feat=load_feat, load_mono = load_mono, load_heatmap=load_heatmap) # Use ankle fix for image-based data
+        if self.humanoid_type in ["quest"]:
+            self._motion_lib = MotionLibQuestImg(motion_file=motion_train_file,  device=self.device, min_length=self._min_motion_len, fix_height= self.height_fix_mode, load_feat=load_feat, load_mono = load_mono, load_heatmap=load_heatmap) # Use ankle fix for image-based data
             self._motion_lib.load_motions(skeleton_trees=self.skeleton_trees, gender_betas=self.humanoid_shapes.cpu(), limb_weights=self.humanoid_limb_and_weights.cpu(), random_sample=not flags.test, max_len=-1 if flags.test else self.max_len, augment_images=self.img_aug and not flags.real_traj and not flags.test)
             self._motion_train_lib = self._motion_eval_lib = self._motion_lib
         elif self.humanoid_type in ["smpl", "smplh", "smplx"]:

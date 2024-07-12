@@ -291,7 +291,7 @@ class HumanoidAMP(Humanoid):
 
         if (asset_file == "mjcf/amp_humanoid.xml"):
             self._num_amp_obs_per_step = 13 + self._dof_obs_size + 28 + 3 * num_key_bodies  # [root_h, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos]
-        elif self.humanoid_type in ["smpl", "smplh", "smplx"]:
+        elif self.humanoid_type in ["smpl", "smplh", "smplx", "quest"]:
             if self.amp_obs_v == 1:
                 self._num_amp_obs_per_step = 13 + self._dof_obs_size + len(self._dof_names) * 3 + 3 * num_key_bodies  # [root_h, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos]
             else:
