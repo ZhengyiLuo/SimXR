@@ -8,5 +8,5 @@ gdown https://drive.google.com/uc?id=1oQEDHzwZ3s20WbHyWfOyjcU2ho81ewHA -O  sampl
 gdown https://drive.google.com/uc?id=107i5YyM_2a2MkPTfJ04z-PGpREa02fVM -O  output/HumanoidIm/simxr_aria/Humanoid.pth # aria model 
 gdown https://drive.google.com/uc?id=189xUxpKQXLok93-hgNjhPvtgI6r5wkkg -O  output/HumanoidIm/phc_z_fut_aria_1/Humanoid_00017000.pth # aria model 
 
-https://drive.google.com/file/d/189xUxpKQXLok93-hgNjhPvtgI6r5wkkg/view?usp=sharing
+
 
