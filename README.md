@@ -18,6 +18,8 @@ Official implementation of CVPR 2024 highlight paper: "Real-Time Simulated Avata
 
 Processed real-world sequences can be found here for evaluations: [Google Drive](https://drive.google.com/drive/folders/1z6cviNR624UERdi8YrAMCyHbjMitsZO9?usp=sharing)
 
+Processed synthetic sequences can be found here for training (uploading, sorry for the delay): [Google Drive](https://drive.google.com/drive/folders/1un7F4xPy4sxPvBT_T4uYUvbWVF8Ia9-r?usp=drive_link)
+
 ## Evaluation 
 
 Evaluate Aria models: 
