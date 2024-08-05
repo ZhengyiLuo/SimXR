@@ -29,7 +29,7 @@ kp_scale: 1
 power_reward: True
 
 #### Distilliation config
-kin_loss: True
+only_kin_loss: True
 distill: True
 save_kin_info: True
 distill_z_model: True

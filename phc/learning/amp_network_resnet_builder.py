@@ -8,7 +8,6 @@ from torchvision.models import resnet18, ResNet18_Weights
 import copy
 from phc.learning.unrealego import network
 from easydict import EasyDict as edict
-import timm
 DISC_LOGIT_INIT_SCALE = 1.0
 
 
@@ -98,6 +97,7 @@ class AMPResNetBuilder(AMPBuilder):
                     )
                     self.feat_mlp = torch.nn.Linear(32 * 40, 512)
                 elif self.use_convnext:
+                    import timm
                     convnext = timm.create_model("convnextv2_atto.fcmae_ft_in1k", pretrained=True)
                     convnext.stem[0] = torch.nn.Conv2d(self.img_size[0], 40, kernel_size=(4, 4), stride=(4, 4))
                     convnext.head = nn.Sequential(
