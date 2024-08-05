@@ -47,6 +47,7 @@ distill_model_config:
 
 models: ['output/HumanoidIm/phc_z_fut_aria_1/Humanoid_00017000.pth']
 
+
 masterfoot: False
 freeze_toe: false
 freeze_hand: False

@@ -832,12 +832,14 @@ class AMPAgent(common_agent.CommonAgent):
                         humanoid_env.kld_coefficient = (0.01 - min_val) * max((anneal_end_epoch -self.epoch_num) / (anneal_end_epoch - anneal_start_epoch), 0) + min_val
                     info_dict["kin_kld_w"] = humanoid_env.kld_coefficient
                 ######### KLD annealing #######
-                
-                
-                    
-                    
             else:
-                raise NotImplementedError()    
+                if self.is_rnn:
+                    pred_action, pred_action_sigma, _ = self.model.a2c_network.eval_actor(batch_dict)
+                else:
+                    pred_action, pred_action_sigma = self.model.a2c_network.eval_actor(batch_dict)
+                # kin_body_loss = (pred_action - gt_action).pow(2).mean() * 10  ## MSE
+                
+                kin_loss = torch.norm(pred_action - gt_action, dim=-1).mean()  ## RMSE
                 
             self.kin_optimizer.zero_grad()
             kin_loss.backward()
