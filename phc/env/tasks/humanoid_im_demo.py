@@ -4,7 +4,6 @@ import torch
 import numpy as np
 from phc.utils.torch_utils import quat_to_tan_norm
 import phc.env.tasks.humanoid_im as humanoid_im
-from phc.env.tasks.humanoid_amp import HumanoidAMP, remove_base_rot
 from phc.utils.motion_lib_smpl import MotionLibSMPL 
 
 from phc.utils import torch_utils

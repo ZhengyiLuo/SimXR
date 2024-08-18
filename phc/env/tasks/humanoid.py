@@ -734,6 +734,8 @@ class Humanoid(BaseTask):
                 self._num_self_obs += 10
             if not self._root_height_obs:
                 self._num_self_obs -= 1
+                
+            
         else:
             print("Unsupported character config file: {s}".format(asset_file))
             assert (False)
@@ -1018,7 +1020,7 @@ class Humanoid(BaseTask):
             col_group = env_id  # no inter-environment collision
 
         col_filter = 0
-        if (self.humanoid_type in ["smpl", "smplh", "smplx"] ) and (not self._has_self_collision):
+        if (self.humanoid_type in ["smpl", "smplh", "smplx", "quest"] ) and (not self._has_self_collision):
             col_filter = 1
 
         start_pose = gymapi.Transform()
@@ -1051,7 +1053,7 @@ class Humanoid(BaseTask):
         humanoid_limb_weight = torch.tensor(limb_lengths + masses)
         self.humanoid_limb_and_weights.append(humanoid_limb_weight)  # ZL: attach limb lengths and full body weight.
 
-        if self.humanoid_type in ["smpl", "smplh", "smplx"]:
+        if self.humanoid_type in ["smpl", "smplh", "smplx", "quest"]:
             gender = self.humanoid_shapes[env_id, 0].long()
             percentage = 1 - np.clip((humanoid_mass - 70) / 70, 0, 1)
             if gender == 0:
@@ -1121,6 +1123,18 @@ class Humanoid(BaseTask):
                     
             props = self.gym.get_actor_rigid_shape_properties(env_ptr, humanoid_handle)
 
+            assert (len(filter_ints) == len(props))
+            for p_idx in range(len(props)):
+                props[p_idx].filter = filter_ints[p_idx]
+            self.gym.set_actor_rigid_shape_properties(env_ptr, humanoid_handle, props)
+        elif self.humanoid_type in ["quest"] and self._has_self_collision:
+
+            if self._has_mesh:
+                raise NotImplementedError
+            else:
+                filter_ints = [1, 14, 1, 248, 256, 34880, 70016, 245792, 0, 16384, 8192, 0, 8192, 138256, 0, 1024, 512, 0, 512, 4, 0, 0, 2, 0, 0]
+            
+            props = self.gym.get_actor_rigid_shape_properties(env_ptr, humanoid_handle)
             assert (len(filter_ints) == len(props))
             for p_idx in range(len(props)):
                 props[p_idx].filter = filter_ints[p_idx]
@@ -1244,8 +1258,6 @@ class Humanoid(BaseTask):
                     body_ang_vel = torch.cat([self._rigid_body_ang_vel_hist, body_ang_vel.unsqueeze(1)], dim=1)
                 if self.self_obs_v == 3:
                     force_sensor_readings = self.vec_sensor_tensor
-                    
-                    
             else:
                 body_pos = self._rigid_body_pos[env_ids]
                 body_rot = self._rigid_body_rot[env_ids]
@@ -1261,21 +1273,16 @@ class Humanoid(BaseTask):
             
             
             
-            if self.humanoid_type in ["smpl", "smplh", "smplx"] :
+            if self.humanoid_type in ["smpl", "smplh", "smplx", "quest"]:
                 if (env_ids is None):
                     body_shape_params = self.humanoid_shapes[:, :-6] if self.humanoid_type in ["smpl", "smplh", "smplx"] else self.humanoid_shapes
                     limb_weights = self.humanoid_limb_and_weights
                 else:
                     body_shape_params = self.humanoid_shapes[env_ids, :-6] if self.humanoid_type in ["smpl", "smplh", "smplx"] else self.humanoid_shapes[env_ids]
                     limb_weights = self.humanoid_limb_and_weights[env_ids]
-                    
+                
                 if self.self_obs_v == 1:
-                    obs = compute_humanoid_observations_smpl_max(body_pos, body_rot, body_vel, body_ang_vel, body_shape_params, limb_weights, self._local_root_obs, self._root_height_obs, self._has_upright_start, self._has_shape_obs, self._has_limb_weight_obs)
-                elif self.self_obs_v == 2:
-                    obs = compute_humanoid_observations_smpl_max_v2(body_pos, body_rot, body_vel, body_ang_vel, body_shape_params, limb_weights, self._local_root_obs, self._root_height_obs, self._has_upright_start, self._has_shape_obs, self._has_limb_weight_obs, self.past_track_steps + 1)
-                elif self.self_obs_v == 3:
-                    obs = compute_humanoid_observations_smpl_max_v3(body_pos, body_rot, body_vel, body_ang_vel, force_sensor_readings, body_shape_params, limb_weights, self._local_root_obs, self._root_height_obs, self._has_upright_start, self._has_shape_obs, self._has_limb_weight_obs)
-                    
+                    obs = compute_humanoid_observations_smpl_mmt_max(body_pos, body_rot, body_vel, body_ang_vel, body_shape_params, limb_weights, self._local_root_obs, self._root_height_obs, self._has_upright_start, self._has_shape_obs, self._has_limb_weight_obs, self.humanoid_type)
 
             else:
                 obs = compute_humanoid_observations_max(body_pos, body_rot, body_vel, body_ang_vel, self._local_root_obs, self._root_height_obs)
@@ -1298,7 +1305,7 @@ class Humanoid(BaseTask):
                 dof_vel = self._dof_vel[env_ids]
                 key_body_pos = self._rigid_body_pos[env_ids][:, self._key_body_ids, :]
 
-            if (self.humanoid_type in ["smpl", "smplh", "smplx"] ) and self.self.has_shape_obs:
+            if (self.humanoid_type in ["smpl", "smplh", "smplx", "quest"] ) and self.self.has_shape_obs:
                 if (env_ids is None):
                     body_shape_params = self.humanoid_shapes
                 else:
@@ -1338,6 +1345,9 @@ class Humanoid(BaseTask):
                     if self._freeze_toe:
                         pd_tar[:, self._dof_names.index("L_Toe") * 3:(self._dof_names.index("L_Toe") * 3 + 3)] = 0
                         pd_tar[:, self._dof_names.index("R_Toe") * 3:(self._dof_names.index("R_Toe") * 3 + 3)] = 0
+            
+            elif self.humanoid_type in ["quest"]:
+                pd_tar = self._action_to_pd_targets(self.actions)
                         
             pd_tar_tensor = gymtorch.unwrap_tensor(pd_tar)
             self.gym.set_dof_position_target_tensor(self.sim, pd_tar_tensor)
@@ -1709,8 +1719,15 @@ def compute_humanoid_reset(reset_buf, progress_buf, contact_buf, contact_body_id
 
 
 @torch.jit.script
-def remove_base_rot(quat):
-    base_rot = quat_conjugate(torch.tensor([[0.5, 0.5, 0.5, 0.5]]).to(quat)) #SMPL
+def remove_base_rot(quat, humanoid_type: str = "smpl"):
+    
+    if humanoid_type == "smpl":
+        base_rot = quat_conjugate(torch.tensor([[0.5, 0.5, 0.5, 0.5]]).to(quat)) #SMPL
+    elif humanoid_type == "quest":
+        base_rot = quat_conjugate(torch.tensor([[0.5, 0.5, 0.5, -0.5]]).to(quat))  #MMT 
+    else:
+        base_rot = quat_conjugate(torch.tensor([[0.5, 0.5, 0.5, 0.5]]).to(quat)) #SMPL
+    
     shape = quat.shape[0]
     return quat_mul(quat, base_rot.repeat(shape, 1))
 
@@ -1768,14 +1785,14 @@ def compute_humanoid_observations_smpl(root_pos, root_rot, root_vel, root_ang_ve
 
 
 @torch.jit.script
-def compute_humanoid_observations_smpl_max(body_pos, body_rot, body_vel, body_ang_vel, smpl_params, limb_weight_params, local_root_obs, root_height_obs, upright, has_smpl_params, has_limb_weight_params):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, bool, bool, bool, bool, bool) -> Tensor
+def compute_humanoid_observations_smpl_mmt_max(body_pos, body_rot, body_vel, body_ang_vel, smpl_params, limb_weight_params, local_root_obs, root_height_obs, upright, has_smpl_params, has_limb_weight_params, humanoid_type):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, bool, bool, bool, bool, bool, str) -> Tensor
     root_pos = body_pos[:, 0, :]
     root_rot = body_rot[:, 0, :]
 
     root_h = root_pos[:, 2:3]
     if not upright:
-        root_rot = remove_base_rot(root_rot)
+        root_rot = remove_base_rot(root_rot, humanoid_type)
     heading_rot_inv = torch_utils.calc_heading_quat_inv(root_rot)
 
     if (not root_height_obs):
@@ -1825,121 +1842,3 @@ def compute_humanoid_observations_smpl_max(body_pos, body_rot, body_vel, body_an
     obs = torch.cat(obs_list, dim=-1)
     return obs
 
-
-@torch.jit.script
-def compute_humanoid_observations_smpl_max_v2(body_pos, body_rot, body_vel, body_ang_vel, smpl_params, limb_weight_params, local_root_obs, root_height_obs, upright, has_smpl_params, has_limb_weight_params, time_steps):
-    ### V2 has time steps. 
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, bool, bool, bool, bool, bool, int) -> Tensor
-    root_pos = body_pos[:, -1, 0, :]
-    root_rot = body_rot[:, -1, 0, :]
-    B, T, J, C = body_pos.shape
-
-    if not upright:
-        root_rot = remove_base_rot(root_rot)
-
-    root_h_obs = root_pos[:, 2:3]
-    heading_inv_rot = torch_utils.calc_heading_quat_inv(root_rot)
-    heading_rot = torch_utils.calc_heading_quat(root_rot)
-    # heading_rot_inv_expand = heading_inv_rot.unsqueeze(-2)
-    # heading_rot_inv_expand = heading_rot_inv_expand.repeat((1, body_pos.shape[1], 1))
-    # flat_heading_rot_inv = heading_rot_inv_expand.reshape(heading_rot_inv_expand.shape[0] * heading_rot_inv_expand.shape[1], heading_rot_inv_expand.shape[2])
-    
-    heading_inv_rot_expand = heading_inv_rot.unsqueeze(-2).repeat((1, J, 1)).repeat_interleave(time_steps, 0).view(-1, 4)
-    heading_rot_expand = heading_rot.unsqueeze(-2).repeat((1, J, 1)).repeat_interleave(time_steps, 0)
-    
-    root_pos_expand = root_pos.unsqueeze(-2).unsqueeze(-2)
-    local_body_pos = body_pos - root_pos_expand
-    flat_local_body_pos = torch_utils.my_quat_rotate(heading_inv_rot_expand, local_body_pos.view(-1, 3))
-    local_body_pos = flat_local_body_pos.reshape(B, time_steps, J * C)
-    local_body_pos = local_body_pos[..., 3:]  # remove root pos
-
-    flat_local_body_rot = quat_mul(heading_inv_rot_expand, body_rot.view(-1, 4))
-    local_body_rot_obs = torch_utils.quat_to_tan_norm(flat_local_body_rot).view(B, time_steps, J * 6)
-
-    if not (local_root_obs):
-        root_rot_obs = torch_utils.quat_to_tan_norm(body_rot[:, :, 0].view(-1, 4)) # If not local root obs, you override it. 
-        local_body_rot_obs[..., 0:6] = root_rot_obs
-
-    local_body_vel = torch_utils.my_quat_rotate(heading_inv_rot_expand, body_vel.view(-1, 3)).view(B, time_steps, J * 3)
-
-    local_body_ang_vel = torch_utils.my_quat_rotate(heading_inv_rot_expand, body_ang_vel.view(-1, 3)).view(B, time_steps, J * 3)
-    
-    ##################### Compute_history #####################
-    body_obs = torch.cat([local_body_pos, local_body_rot_obs, local_body_vel, local_body_ang_vel], dim = -1)
-
-    obs_list = []
-    if root_height_obs:
-        body_obs = torch.cat([body_pos[:, :, 0, 2:3], body_obs], dim = -1)
-        
-    
-    obs_list += [local_body_pos, local_body_rot_obs, local_body_vel, local_body_ang_vel]
-    
-    if has_smpl_params:
-        raise NotImplementedError
-        
-    if has_limb_weight_params:
-        raise NotImplementedError
-
-    obs = body_obs.view(B, -1)
-    return obs
-
-
-
-@torch.jit.script
-def compute_humanoid_observations_smpl_max_v3(body_pos, body_rot, body_vel, body_ang_vel, force_sensor_readings, smpl_params, limb_weight_params, local_root_obs, root_height_obs, upright, has_smpl_params, has_limb_weight_params):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, bool, bool, bool, bool, bool) -> Tensor
-    root_pos = body_pos[:, 0, :]
-    root_rot = body_rot[:, 0, :]
-
-    root_h = root_pos[:, 2:3]
-    if not upright:
-        root_rot = remove_base_rot(root_rot)
-    heading_rot_inv = torch_utils.calc_heading_quat_inv(root_rot)
-
-    if (not root_height_obs):
-        root_h_obs = torch.zeros_like(root_h)
-    else:
-        root_h_obs = root_h
-
-    heading_rot_inv_expand = heading_rot_inv.unsqueeze(-2)
-    heading_rot_inv_expand = heading_rot_inv_expand.repeat((1, body_pos.shape[1], 1))
-    flat_heading_rot_inv = heading_rot_inv_expand.reshape(heading_rot_inv_expand.shape[0] * heading_rot_inv_expand.shape[1], heading_rot_inv_expand.shape[2])
-
-    root_pos_expand = root_pos.unsqueeze(-2)
-    local_body_pos = body_pos - root_pos_expand
-    flat_local_body_pos = local_body_pos.reshape(local_body_pos.shape[0] * local_body_pos.shape[1], local_body_pos.shape[2])
-    flat_local_body_pos = torch_utils.my_quat_rotate(flat_heading_rot_inv, flat_local_body_pos)
-    local_body_pos = flat_local_body_pos.reshape(local_body_pos.shape[0], local_body_pos.shape[1] * local_body_pos.shape[2])
-    local_body_pos = local_body_pos[..., 3:]  # remove root pos
-
-    flat_body_rot = body_rot.reshape(body_rot.shape[0] * body_rot.shape[1], body_rot.shape[2])  # This is global rotation of the body
-    flat_local_body_rot = quat_mul(flat_heading_rot_inv, flat_body_rot)
-    flat_local_body_rot_obs = torch_utils.quat_to_tan_norm(flat_local_body_rot)
-    local_body_rot_obs = flat_local_body_rot_obs.reshape(body_rot.shape[0], body_rot.shape[1] * flat_local_body_rot_obs.shape[1])
-
-    if not (local_root_obs):
-        root_rot_obs = torch_utils.quat_to_tan_norm(root_rot) # If not local root obs, you override it. 
-        local_body_rot_obs[..., 0:6] = root_rot_obs
-
-    flat_body_vel = body_vel.reshape(body_vel.shape[0] * body_vel.shape[1], body_vel.shape[2])
-    flat_local_body_vel = torch_utils.my_quat_rotate(flat_heading_rot_inv, flat_body_vel)
-    local_body_vel = flat_local_body_vel.reshape(body_vel.shape[0], body_vel.shape[1] * body_vel.shape[2])
-
-    flat_body_ang_vel = body_ang_vel.reshape(body_ang_vel.shape[0] * body_ang_vel.shape[1], body_ang_vel.shape[2])
-    flat_local_body_ang_vel = torch_utils.my_quat_rotate(flat_heading_rot_inv, flat_body_ang_vel)
-    local_body_ang_vel = flat_local_body_ang_vel.reshape(body_ang_vel.shape[0], body_ang_vel.shape[1] * body_ang_vel.shape[2])
-    
-
-    obs_list = []
-    if root_height_obs:
-        obs_list.append(root_h_obs)
-    obs_list += [local_body_pos, local_body_rot_obs, local_body_vel, local_body_ang_vel, force_sensor_readings]
-    
-    if has_smpl_params:
-        obs_list.append(smpl_params)
-        
-    if has_limb_weight_params:
-        obs_list.append(limb_weight_params)
-
-    obs = torch.cat(obs_list, dim=-1)
-    return obs

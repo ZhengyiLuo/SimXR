@@ -343,7 +343,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
 
         else:
             self._motion_lib = MotionLib(motion_file=motion_train_file, dof_body_ids=self._dof_body_ids, dof_offsets=self._dof_offsets, device=self.device)
-
+        
         return
 
     def resample_motions(self):
@@ -750,14 +750,14 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
         ref_body_ang_vel_subset = ref_body_ang_vel[..., self._track_bodies_id, :]
 
         if self.obs_v == 1 :
-            obs = compute_imitation_observations(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start)
+            obs = compute_imitation_observations(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start, self.humanoid_type)
 
         elif self.obs_v == 2:
             ref_dof_pos_subset = ref_dof_pos.reshape(-1, len(self._dof_names), 3)[..., self._track_bodies_id[1:] - 1, :]  # Remove root from dof dim
             dof_pos_subset = self._dof_pos[env_ids].reshape(-1, len(self._dof_names), 3)[..., self._track_bodies_id[1:] - 1, :]
-            obs = compute_imitation_observations_v2(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, dof_pos_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, ref_dof_pos_subset, time_steps, self._has_upright_start)
+            obs = compute_imitation_observations_v2(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, dof_pos_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, ref_dof_pos_subset, time_steps, self._has_upright_start, self.humanoid_type)
         elif self.obs_v == 3:
-            obs = compute_imitation_observations_v3(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start)
+            obs = compute_imitation_observations_v3(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start, self.humanoid_type)
         elif self.obs_v == 4 or self.obs_v == 5 or self.obs_v == 6 or self.obs_v == 8 or self.obs_v == 9:
 
             if self.zero_out_far:
@@ -784,22 +784,22 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                 ref_body_ang_vel_subset[random_occlu_idx] = body_ang_vel_subset[random_occlu_idx]
 
             if self.obs_v == 4 or self.obs_v == 6:
-                obs = compute_imitation_observations_v6(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start)
+                obs = compute_imitation_observations_v6(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start, self.humanoid_type)
                 
                 # obs[:, -1] = env_ids.clone().float(); print('debugging')
                 # obs[:, -2] = self.progress_buf[env_ids].clone().float(); print('debugging')
                 
             elif self.obs_v == 5:
-                obs = compute_imitation_observations_v6(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start)
+                obs = compute_imitation_observations_v6(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start, self.humanoid_type)
                 one_hots = self._motion_lib.one_hot_motions[env_ids]
                 obs = torch.cat([obs, one_hots], dim=-1)
                 
             elif self.obs_v == 8:
-                obs = compute_imitation_observations_v8(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start)
+                obs = compute_imitation_observations_v8(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start, self.humanoid_type)
             elif self.obs_v == 9:
                 ref_root_vel_subset = ref_body_vel_subset[:, 0]
                 ref_root_ang_vel_subset =ref_body_ang_vel_subset[:, 0]
-                obs = compute_imitation_observations_v9(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_root_vel_subset, ref_root_ang_vel_subset, time_steps, self._has_upright_start)
+                obs = compute_imitation_observations_v9(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_root_vel_subset, ref_root_ang_vel_subset, time_steps, self._has_upright_start, self.humanoid_type)
             
             if self._fut_tracks_dropout and not flags.test:
                 dropout_rate = 0.1
@@ -965,7 +965,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
 
     def _sample_ref_state(self, env_ids):
         num_envs = env_ids.shape[0]
-
+        
         if (self._state_init == HumanoidAMP.StateInit.Random or self._state_init == HumanoidAMP.StateInit.Hybrid):
             motion_times = self._sample_time(self._sampled_motion_ids[env_ids])
         elif (self._state_init == HumanoidAMP.StateInit.Start):
@@ -976,7 +976,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
         if flags.test:
             motion_times[:] = 0
         
-        if self.humanoid_type in ["smpl", "smplh", "smplx"] :
+        if self.humanoid_type in ["smpl", "smplh", "smplx", "quest"] :
             motion_res = self._get_state_from_motionlib_cache(self._sampled_motion_ids[env_ids], motion_times, self._global_offset[env_ids])
             root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, smpl_params, limb_weights, pose_aa, ref_rb_pos, ref_rb_rot, ref_body_vel, ref_body_ang_vel = \
                 motion_res["root_pos"], motion_res["root_rot"], motion_res["dof_pos"], motion_res["root_vel"], motion_res["root_ang_vel"], motion_res["dof_vel"], \
@@ -998,7 +998,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
         motion_ids = torch.from_numpy(motion_ids).to(self.device)
         # motion_ids[:] = 2
         motion_times = self._hack_motion_time
-        if self.humanoid_type in ["smpl", "smplh", "smplx"] :
+        if self.humanoid_type in ["smpl", "smplh", "smplx", "quest"]:
             motion_res = self._get_state_from_motionlib_cache(motion_ids, motion_times, self._global_offset)
             root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, smpl_params, limb_weights, pose_aa, rb_pos, rb_rot, body_vel, body_ang_vel = \
                 motion_res["root_pos"], motion_res["root_rot"], motion_res["dof_pos"], motion_res["root_vel"], motion_res["root_ang_vel"], motion_res["dof_vel"], \
@@ -1202,14 +1202,14 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
 
 
 @torch.jit.script
-def compute_imitation_observations(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, time_steps, upright):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor, int, bool) -> Tensor
+def compute_imitation_observations(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, time_steps, upright, humanoid_type):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor, int, bool, str) -> Tensor
     # We do not use any dof in observation.
     obs = []
     B, J, _ = body_pos.shape
 
     if not upright:
-        root_rot = remove_base_rot(root_rot)
+        root_rot = remove_base_rot(root_rot, humanoid_type )
 
     heading_inv_rot = torch_utils.calc_heading_quat_inv(root_rot)
     heading_rot = torch_utils.calc_heading_quat(root_rot)
@@ -1239,14 +1239,14 @@ def compute_imitation_observations(root_pos, root_rot, body_pos, body_rot, body_
 
 
 @torch.jit.script
-def compute_imitation_observations_v2(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, dof_pos, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, ref_dof_pos, time_steps, upright):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor,Tensor,Tensor, int, bool) -> Tensor
+def compute_imitation_observations_v2(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, dof_pos, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, ref_dof_pos, time_steps, upright, humanoid_type):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor,Tensor,Tensor, int, bool, str) -> Tensor
     # Adding dof
     obs = []
     B, J, _ = body_pos.shape
 
     if not upright:
-        root_rot = remove_base_rot(root_rot)
+        root_rot = remove_base_rot(root_rot, humanoid_type)
 
     heading_inv_rot = torch_utils.calc_heading_quat_inv(root_rot)
     heading_rot = torch_utils.calc_heading_quat(root_rot)
@@ -1280,14 +1280,14 @@ def compute_imitation_observations_v2(root_pos, root_rot, body_pos, body_rot, bo
 
 
 @torch.jit.script
-def compute_imitation_observations_v3(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, time_steps, upright):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor, int, bool) -> Tensor
+def compute_imitation_observations_v3(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, time_steps, upright, humanoid_type):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor, int, bool, str) -> Tensor
     # No velocities
     obs = []
     B, J, _ = body_pos.shape
 
     if not upright:
-        root_rot = remove_base_rot(root_rot)
+        root_rot = remove_base_rot(root_rot, humanoid_type)
 
     heading_inv_rot = torch_utils.calc_heading_quat_inv(root_rot)
     heading_rot = torch_utils.calc_heading_quat(root_rot)
@@ -1308,15 +1308,15 @@ def compute_imitation_observations_v3(root_pos, root_rot, body_pos, body_rot, bo
 
 
 @torch.jit.script
-def compute_imitation_observations_v6(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, time_steps, upright):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor,Tensor,Tensor, int, bool) -> Tensor
+def compute_imitation_observations_v6(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, time_steps, upright, humanoid_type):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor,Tensor,Tensor, int, bool, str) -> Tensor
     # Adding pose information at the back
     # Future tracks in this obs will not contain future diffs.
     obs = []
     B, J, _ = body_pos.shape
 
     if not upright:
-        root_rot = remove_base_rot(root_rot)
+        root_rot = remove_base_rot(root_rot, humanoid_type)
 
     heading_inv_rot = torch_utils.calc_heading_quat_inv(root_rot)
     heading_rot = torch_utils.calc_heading_quat(root_rot)
@@ -1361,15 +1361,15 @@ def compute_imitation_observations_v6(root_pos, root_rot, body_pos, body_rot, bo
 
 
 @torch.jit.script
-def compute_imitation_observations_v7(root_pos, root_rot, body_pos, body_vel, ref_body_pos, ref_body_vel, time_steps, upright):
-    # type: (Tensor, Tensor, Tensor,Tensor, Tensor, Tensor, int, bool) -> Tensor
+def compute_imitation_observations_v7(root_pos, root_rot, body_pos, body_vel, ref_body_pos, ref_body_vel, time_steps, upright, humanoid_type):
+    # type: (Tensor, Tensor, Tensor,Tensor, Tensor, Tensor, int, bool, str) -> Tensor
     # No rotation information. Leave IK for RL.
     # Future tracks in this obs will not contain future diffs.
     obs = []
     B, J, _ = body_pos.shape
 
     if not upright:
-        root_rot = remove_base_rot(root_rot)
+        root_rot = remove_base_rot(root_rot, humanoid_type)
 
     heading_inv_rot = torch_utils.calc_heading_quat_inv(root_rot)
     heading_inv_rot_expand = heading_inv_rot.unsqueeze(-2).repeat((1, body_pos.shape[1], 1)).repeat_interleave(time_steps, 0)
@@ -1395,15 +1395,15 @@ def compute_imitation_observations_v7(root_pos, root_rot, body_pos, body_vel, re
     return obs
 
 @torch.jit.script
-def compute_imitation_observations_v8(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, time_steps, upright):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor,Tensor,Tensor, int, bool) -> Tensor
+def compute_imitation_observations_v8(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_body_vel, ref_body_ang_vel, time_steps, upright, humanoid_type):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor,Tensor,Tensor, int, bool, str) -> Tensor
     # Adding pose information at the back
     # Future tracks in this obs will not contain future diffs.
     obs = []
     B, J, _ = body_pos.shape
 
     if not upright:
-        root_rot = remove_base_rot(root_rot)
+        root_rot = remove_base_rot(root_rot, humanoid_type)
 
     heading_inv_rot = torch_utils.calc_heading_quat_inv(root_rot)
     heading_rot = torch_utils.calc_heading_quat(root_rot)
@@ -1467,15 +1467,15 @@ def compute_imitation_observations_v8(root_pos, root_rot, body_pos, body_rot, bo
 
 
 @torch.jit.script
-def compute_imitation_observations_v9(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_root_vel, ref_body_root_ang_vel, time_steps, upright):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor,Tensor,Tensor, int, bool) -> Tensor
+def compute_imitation_observations_v9(root_pos, root_rot, body_pos, body_rot, body_vel, body_ang_vel, ref_body_pos, ref_body_rot, ref_root_vel, ref_body_root_ang_vel, time_steps, upright, humanoid_type):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor,Tensor, Tensor,Tensor,Tensor, int, bool, str) -> Tensor
     # Adding pose information at the back
     # Future tracks in this obs will not contain future diffs.
     obs = []
     B, J, _ = body_pos.shape
 
     if not upright:
-        root_rot = remove_base_rot(root_rot)
+        root_rot = remove_base_rot(root_rot, humanoid_type)
 
     heading_inv_rot = torch_utils.calc_heading_quat_inv(root_rot)
     heading_rot = torch_utils.calc_heading_quat(root_rot)

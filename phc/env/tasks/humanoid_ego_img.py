@@ -9,7 +9,6 @@ import phc.env.tasks.humanoid_im as humanoid_im
 from phc.utils.motion_lib_base import local_rotation_to_dof_vel
 from phc.utils.motion_lib_quest_img import  MotionLibQuestImg
 from phc.utils.motion_lib_smpl_img import  MotionLibSMPLImg
-from phc.env.tasks.humanoid_amp import remove_base_rot
 
 from phc.utils.flags import flags
 from rl_games.algos_torch import torch_ext
@@ -162,17 +161,12 @@ class HumanoidEgoImg(humanoid_im.HumanoidIm):
         load_heatmap = self.use_unrealego or self.use_visibility_branch
         load_mono = len(self.img_dim) > 1 or not self.headless
         
-        if self.humanoid_type in ["quest"]:
-            self._motion_lib = MotionLibQuestImg(motion_file=motion_train_file,  device=self.device, min_length=self._min_motion_len, fix_height= self.height_fix_mode, load_feat=load_feat, load_mono = load_mono, load_heatmap=load_heatmap) # Use ankle fix for image-based data
-            self._motion_lib.load_motions(skeleton_trees=self.skeleton_trees, gender_betas=self.humanoid_shapes.cpu(), limb_weights=self.humanoid_limb_and_weights.cpu(), random_sample=not flags.test, max_len=-1 if flags.test else self.max_len, augment_images=self.img_aug and not flags.real_traj and not flags.test)
-            self._motion_train_lib = self._motion_eval_lib = self._motion_lib
-        elif self.humanoid_type in ["smpl", "smplh", "smplx"]:
-            motion_lib_cfg = EasyDict({
+        motion_lib_cfg = EasyDict({
                 "motion_file": motion_train_file,
                 "device": torch.device("cpu"),
                 "fix_height": FixHeightMode.full_fix,
                 "min_length": self._min_motion_len,
-                "max_length": self.max_len,
+                "max_length": -1 if flags.test else self.max_len,
                 "im_eval": flags.im_eval,
                 "multi_thread": True ,
                 "smpl_type": self.humanoid_type,
@@ -183,6 +177,12 @@ class HumanoidEgoImg(humanoid_im.HumanoidIm):
                 "load_mono": load_mono, 
                 "load_head_gt_3d": False,
             })
+        
+        if self.humanoid_type in ["quest"]:
+            self._motion_lib = MotionLibQuestImg(motion_lib_cfg) # Use ankle fix for image-based data
+            self._motion_lib.load_motions(skeleton_trees=self.skeleton_trees, gender_betas=self.humanoid_shapes.cpu(), limb_weights=self.humanoid_limb_and_weights.cpu(), random_sample=not flags.test, max_len=-1 if flags.test else self.max_len, augment_images=self.img_aug and not flags.real_traj and not flags.test)
+            self._motion_train_lib = self._motion_eval_lib = self._motion_lib
+        elif self.humanoid_type in ["smpl", "smplh", "smplx"]:
             self._motion_lib = MotionLibSMPLImg(motion_lib_cfg) # Use ankle fix for image-based data
             self._motion_lib.load_motions(skeleton_trees=self.skeleton_trees, gender_betas=self.humanoid_shapes.cpu(), limb_weights=self.humanoid_limb_and_weights.cpu(), random_sample=not flags.test, max_len=-1 if flags.test else self.max_len)
             self._motion_train_lib = self._motion_eval_lib = self._motion_lib
@@ -356,7 +356,7 @@ class HumanoidEgoImg(humanoid_im.HumanoidIm):
                 ref_body_vel_subset[random_occlu_idx] = body_vel_subset[random_occlu_idx]
                 ref_body_ang_vel_subset[random_occlu_idx] = body_ang_vel_subset[random_occlu_idx]
 
-            obs = humanoid_im.compute_imitation_observations_v6(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start)
+            obs = humanoid_im.compute_imitation_observations_v6(root_pos, root_rot, body_pos_subset, body_rot_subset, body_vel_subset, body_ang_vel_subset, ref_rb_pos_subset, ref_rb_rot_subset, ref_body_vel_subset, ref_body_ang_vel_subset, time_steps, self._has_upright_start, self.humanoid_type)
             
             if return_img:
                 if len(self.img_dim) > 1:

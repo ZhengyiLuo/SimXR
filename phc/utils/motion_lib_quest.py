@@ -38,8 +38,8 @@ if not USE_CACHE:
 
 class MotionLibQuest(MotionLibBase):
 
-    def __init__(self, motion_file, device, fix_height=FixHeightMode.full_fix, masterfoot_conifg=None, min_length=-1, im_eval=False, multi_thread=True):
-        super().__init__(motion_file=motion_file, device=device, fix_height=fix_height, masterfoot_conifg=masterfoot_conifg, min_length=min_length, im_eval=im_eval, multi_thread=multi_thread)
+    def __init__(self, motion_lib_cfg):
+        super().__init__(motion_lib_cfg=motion_lib_cfg)
         return
     
         
@@ -62,8 +62,10 @@ class MotionLibQuest(MotionLibBase):
         
 
     @staticmethod
-    def load_motion_with_skeleton(ids, motion_data_list, skeleton_trees, gender_betas, fix_height, mesh_parsers, masterfoot_config, max_len, queue, pid):
+    def load_motion_with_skeleton(ids, motion_data_list, skeleton_trees, gender_betas,  mesh_parsers, config, queue, pid):
         # ZL: loading motion with the specified skeleton. Perfoming forward kinematics to get the joint positions
+        max_len = config.max_length
+        fix_height = config.fix_height
         
         res = {}
         for f in range(len(motion_data_list)):
@@ -94,7 +96,7 @@ class MotionLibQuest(MotionLibBase):
             # trans = torch.matmul(trans, torch.from_numpy(random_heading_rot.as_matrix().T).float())
             ###### ZL: randomize the heading ######
             
-            trans, trans_fix = MotionLibMMT.fix_trans_height(curr_file['mmt_pose_params'], trans, curr_gender_beta, mesh_parsers, fix_height_mode = fix_height)
+            # trans, trans_fix = MotionLibMMT.fix_trans_height(curr_file['mmt_pose_params'], trans, curr_gender_beta, mesh_parsers, fix_height_mode = fix_height) # No mesh loader for Quest (momentum) humanoid
 
             sk_state = SkeletonState.from_rotation_and_root_translation(copy.deepcopy(skeleton_trees[f]), pose_quat, trans, is_local=True)
 

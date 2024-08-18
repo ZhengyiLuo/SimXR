@@ -103,14 +103,14 @@ class MotionlibMode(Enum):
     
 class MotionLibQuestImg(MotionLibQuest):
 
-    def __init__(self, motion_file,  device, fix_height=FixHeightMode.full_fix, masterfoot_conifg=None, min_length=-1, im_eval=False, multi_thread=True, mmt_v=1, load_mono = False, load_feat = False, load_heatmap = False, load_head_gt_3d = False):
+    def __init__(self, motion_lib_cfg):
         # ZL Hack: can't really load .pkl for all the images. 
-        super().__init__(motion_file=motion_file, device=device, fix_height=fix_height, masterfoot_conifg=masterfoot_conifg, min_length=min_length, im_eval=im_eval, multi_thread=multi_thread, mmt_v = mmt_v)
+        super().__init__(motion_lib_cfg=motion_lib_cfg)
     
-        self.load_mono = load_mono
-        self.load_feat = load_feat
-        self.load_heatmap = load_heatmap
-        self.load_head_gt_3d = load_head_gt_3d
+        self.load_mono = motion_lib_cfg.load_mono
+        self.load_feat = motion_lib_cfg.load_feat
+        self.load_heatmap = motion_lib_cfg.load_heatmap
+        self.load_head_gt_3d = motion_lib_cfg.load_head_gt_3d
         
         joints_name_hp = copy.deepcopy(JOINT_NAMES_PICK)
         joints_name_hp.remove("b_head")
@@ -136,9 +136,10 @@ class MotionLibQuestImg(MotionLibQuest):
         
     
     @staticmethod
-    def load_motion_with_skeleton(ids, motion_data_list, skeleton_trees, gender_betas, fix_height, mesh_parsers, masterfoot_config, max_len, queue, pid):
+    def load_motion_with_skeleton(ids, motion_data_list, skeleton_trees, gender_betas,  mesh_parsers, config, queue, pid):
         # ZL: loading motion with the specified skeleton. Perfoming forward kinematics to get the joint positions
-
+        max_len = config.max_length
+        fix_height = config.fix_height
         res = {}
         for f in range(len(motion_data_list)):
             assert (len(ids) == len(motion_data_list))
@@ -161,7 +162,8 @@ class MotionLibQuestImg(MotionLibQuest):
             pose_quat_global = curr_file['pose_quat_global'].clone()[start:end]
             B, J, N = pose_quat.shape
             
-            trans, trans_fix = MotionLibMMT.fix_trans_height(curr_file['mmt_pose_params'], trans, curr_gender_beta, mesh_parsers, fix_height_mode = fix_height)
+            # trans, trans_fix = MotionLibQuest.fix_trans_height(curr_file['mmt_pose_params'], trans, curr_gender_beta, mesh_parsers, fix_height_mode = fix_height) # No mesh loader for Quest (momentum) humanoid
+            trans[..., 2] -= 0.0025
             #####################
 
             sk_state = SkeletonState.from_rotation_and_root_translation(copy.deepcopy(skeleton_trees[f]), pose_quat, trans, is_local=True)
