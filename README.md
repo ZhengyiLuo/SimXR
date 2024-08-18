@@ -56,7 +56,7 @@ python phc/run_hydra.py  exp_name=simxr_aria env=env_simxr_aria learning=im_simx
 Evaluate Quest 2 models using real-world sequences: 
 ```
 
-python phc/run_hydra.py  exp_name=simxr_quest env=env_simxr_quest2 learning=im_simxr env.motion_file=sample_data/capture00.pkl  robot=quest_humanoid  env.cycle_motion=False has_eval=True real_traj=True  epoch=-1 test=True env.num_envs=1  headless=False  no_virtual_display=True
+python phc/run_hydra.py  exp_name=simxr_quest env=env_simxr_quest learning=im_simxr env.motion_file=sample_data/capture00.pkl  robot=quest_humanoid  env.cycle_motion=False has_eval=True real_traj=True  epoch=-1 test=True env.num_envs=1  headless=False  no_virtual_display=True
 
 ```
 

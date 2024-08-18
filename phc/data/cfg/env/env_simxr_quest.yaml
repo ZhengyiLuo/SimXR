@@ -34,7 +34,7 @@ distill_z_model: False
 distill_model_config:
   z_activation: "silu"
   root_height_obs: False
-models: ['output/dgx/mmt_im_2_1/Humanoid_00402500.pth']
+models: ['output/HumanoidIm/phc_prim_quest/Humanoid.pth']
 
 masterfoot: False
 freeze_toe: false

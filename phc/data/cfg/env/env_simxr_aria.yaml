@@ -45,7 +45,7 @@ distill_model_config:
   z_type: "sphere"
   root_height_obs: True
 
-models: ['output/HumanoidIm/phc_z_fut_aria_1/Humanoid_00017000.pth']
+models: ['output/HumanoidIm/phc_prim_fut_aria_1/Humanoid.pth']
 
 
 masterfoot: False

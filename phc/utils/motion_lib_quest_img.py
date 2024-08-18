@@ -163,7 +163,6 @@ class MotionLibQuestImg(MotionLibQuest):
             B, J, N = pose_quat.shape
             
             # trans, trans_fix = MotionLibQuest.fix_trans_height(curr_file['mmt_pose_params'], trans, curr_gender_beta, mesh_parsers, fix_height_mode = fix_height) # No mesh loader for Quest (momentum) humanoid
-            trans[..., 2] -= 0.0025
             #####################
 
             sk_state = SkeletonState.from_rotation_and_root_translation(copy.deepcopy(skeleton_trees[f]), pose_quat, trans, is_local=True)
