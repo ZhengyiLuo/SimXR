@@ -44,20 +44,20 @@ class MotionLibQuest(MotionLibBase):
     
         
     @staticmethod
-    def fix_trans_height(mmt_params, trans, curr_scales, mesh_parsers, fix_height_mode = FixHeightMode.full_fix):
+    def fix_trans_height(skeleton_tree, pose_quat, trans, fix_height_mode = FixHeightMode.full_fix):
         if fix_height_mode == FixHeightMode.no_fix:
             return trans, 0
         
         with torch.no_grad():
             height_tolorance = 0.0
             frame_check = 30
-            verts, model_params, joint_params, state_t, state_r, state_s = mesh_parsers(mmt_params[:frame_check, :], curr_scales, mesh_parsers.mesh_vertices) # only uses the first 60 frames, which usually is a calibration phase. To conserve memory. 
-            verts = verts / 100
+            
+            sk_state = SkeletonState.from_rotation_and_root_translation(skeleton_tree, pose_quat[:frame_check, :], trans[:frame_check, :], is_local=True)
             
             if fix_height_mode == FixHeightMode.full_fix or fix_height_mode == FixHeightMode.ankle_fix: # MMT ankle fix not implemented yet
-                diff_fix = verts[:, :, 1].min() # ZL: fix the height to be 0
+                diff_fix = sk_state.global_translation[..., 2].min() # ZL: fix the height to be 0
                 # import ipdb; ipdb.set_trace()
-                trans[..., -1] -= diff_fix 
+                trans[..., -1] -= diff_fix -0.0871 # Rough height of the feet. 
             return trans, diff_fix
         
 
@@ -96,7 +96,7 @@ class MotionLibQuest(MotionLibBase):
             # trans = torch.matmul(trans, torch.from_numpy(random_heading_rot.as_matrix().T).float())
             ###### ZL: randomize the heading ######
             
-            # trans, trans_fix = MotionLibMMT.fix_trans_height(curr_file['mmt_pose_params'], trans, curr_gender_beta, mesh_parsers, fix_height_mode = fix_height) # No mesh loader for Quest (momentum) humanoid
+            trans, trans_fix = MotionLibQuest.fix_trans_height(skeleton_trees[f], pose_quat, trans, fix_height_mode = fix_height) # No mesh loader for Quest (momentum) humanoid
 
             sk_state = SkeletonState.from_rotation_and_root_translation(copy.deepcopy(skeleton_trees[f]), pose_quat, trans, is_local=True)
 
