@@ -8,6 +8,7 @@ from phc.utils.torch_utils import quat_to_tan_norm
 import phc.env.tasks.humanoid_amp_task as humanoid_amp_task
 from phc.env.tasks.humanoid_amp import HumanoidAMP, remove_base_rot
 from phc.utils.motion_lib_smpl import MotionLibSMPL
+from phc.utils.motion_lib_quest import MotionLibQuest
 from phc.utils.motion_lib_base import FixHeightMode
 from easydict import EasyDict
 
@@ -110,7 +111,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
         return
     
     def setup_kin_info(self):
-        if self.cfg.env.save_kin_info:
+        if self.save_kin_info:
             root_pos, root_rot = self._rigid_body_pos[:, 0, :], self._rigid_body_rot[:, 0, :]
             self.kin_dict = OrderedDict()
             self.kin_dict.update({ # default set of kinemaitc information
@@ -337,6 +338,26 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             self._motion_train_lib = MotionLibSMPL(motion_lib_cfg)
             motion_lib_cfg.im_eval = True
             self._motion_eval_lib = MotionLibSMPL(motion_lib_cfg)
+
+            self._motion_lib = self._motion_train_lib
+            self._motion_lib.load_motions(skeleton_trees=self.skeleton_trees, gender_betas=self.humanoid_shapes.cpu(), limb_weights=self.humanoid_limb_and_weights.cpu(), random_sample=(not flags.test) and (not self.seq_motions), max_len=-1 if flags.test else self.max_len)
+        elif self.humanoid_type in ["quest"]:
+            motion_lib_cfg = EasyDict({
+                "motion_file": motion_train_file,
+                "device": torch.device("cpu"),
+                "fix_height": FixHeightMode.full_fix,
+                "min_length": self._min_motion_len,
+                "max_length": -1,
+                "im_eval": flags.im_eval,
+                "multi_thread": True ,
+                "smpl_type": self.humanoid_type,
+                "randomrize_heading": True,
+                "device": self.device,
+            })
+            motion_eval_file = motion_train_file
+            self._motion_train_lib = MotionLibQuest(motion_lib_cfg)
+            motion_lib_cfg.im_eval = True
+            self._motion_eval_lib = MotionLibQuest(motion_lib_cfg)
 
             self._motion_lib = self._motion_train_lib
             self._motion_lib.load_motions(skeleton_trees=self.skeleton_trees, gender_betas=self.humanoid_shapes.cpu(), limb_weights=self.humanoid_limb_and_weights.cpu(), random_sample=(not flags.test) and (not self.seq_motions), max_len=-1 if flags.test else self.max_len)
