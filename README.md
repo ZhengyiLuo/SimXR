@@ -11,6 +11,15 @@ Official implementation of CVPR 2024 highlight paper: "Real-Time Simulated Avata
   <img src="assets/simxr_teaser.gif" />
 </div>
 
+## News 🚩
+
+[August 20, 2024] Data released!
+
+[August 5, 2024] Evaluation code released!
+
+[May 11, 2024] Skeleton code Released!
+
+
 ### Dependencies
 1. Create new conda environment and install pytroch:
 
@@ -39,17 +48,19 @@ pip install -r requirement.txt
 ## Data 
 ### Aria 
 
-Processed Aria sequences can be found here for training and evaluation: [[Train]](https://drive.google.com/drive/folders/1hvwYZnPOowWnwuMgu28i_-KS9lSl9YUX?usp=drive_link) [[Test]](https://drive.google.com/drive/folders/1BWecE6BSDfrzUGXxlU_UOnk1gJ0vXVMJ?usp=drive_link)
+Processed Aria sequences can be found here for training and evaluation: [[Train]](https://drive.google.com/drive/folders/1ZsT4sgz3NUmpoMqcR35KJ-hFfuknrVQi?usp=drive_link) [[Test]](https://drive.google.com/drive/folders/10L8tARGzShPwzG1aJM3fPzIxuarEBAKW?usp=drive_link)
 
 ### Quest 2
 Processed real-world sequences can be found here for evaluations: [[Google Drive]](https://drive.google.com/drive/folders/1z6cviNR624UERdi8YrAMCyHbjMitsZO9?usp=sharing)
 
-Processed synthetic sequences can be found here for training: [[Google Drive]](https://drive.google.com/drive/folders/19AnRCFpO8ML82XGvNQOGtPYzbE1vvHQi?usp=sharing)
+Processed synthetic sequences can be found here for training: [[Train]]() [[Test]]()
 
 ### Splitting Data 
 After downloading the data, you can split the data into training and testing data using the following command: 
 
 ``` 
+python scripts/data_process/split_data_syn.py 
+python scripts/data_process/split_data_aria.py 
 
 ```
 
