@@ -52,7 +52,7 @@ def split_all_files(all_files, data_dir):
             joblib.dump(data_entry, osp.join(data_dir, f"{data_split}_seg_motion/{take_key}.pkl"))
 
 
-data_dir = "/hdd2/zen/data/SimXR/syn"
+data_dir = "/hdd3/zen/data/SimXR/syn"
 ###################### Splitting data into Train and Test ######################
 sinlges_dir = osp.join(data_dir, "singles")
 train_dir = osp.join(data_dir, f"train/")

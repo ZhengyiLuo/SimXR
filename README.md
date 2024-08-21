@@ -53,7 +53,7 @@ Processed Aria sequences can be found here for training and evaluation: [[Train]
 ### Quest 2
 Processed real-world sequences can be found here for evaluations: [[Google Drive]](https://drive.google.com/drive/folders/1z6cviNR624UERdi8YrAMCyHbjMitsZO9?usp=sharing)
 
-Processed synthetic sequences can be found here for training: [[Train]]() [[Test]]()
+Processed synthetic sequences can be found here for training: [[Train]](https://drive.google.com/drive/folders/1jMld_d6JmyNkq0w1mBWH5nSts9tsO47b?usp=drive_link) [[Test]](https://drive.google.com/drive/folders/1RACtEleG5saxvjyt1KRe-p0jA4WmAGMS?usp=drive_link)
 
 ### Splitting Data 
 After downloading the data, you can split the data into training and testing data using the following command: 
