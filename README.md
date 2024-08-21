@@ -58,8 +58,8 @@ Processed synthetic sequences can be found here for training: [[Train]](https://
 After downloading the data, you can split the data into training and testing data using the following command: 
 
 ``` 
-python scripts/data_process/split_data_syn.py 
-python scripts/data_process/split_data_aria.py 
+python scripts/data_process/split_data.py  --data_dir [path to downloaded synethic data]
+python scripts/data_process/split_data.py  --data_dir [path to downloaded aria data]
 
 ```
 
@@ -93,13 +93,13 @@ python phc/run_hydra.py  exp_name=phc_prim_quest env=env_im_quest learning=im_qu
 Train Aria models: 
 
 ```
-python phc/run_hydra.py  exp_name=simxr_aria env=env_simxr_aria learning=im_simxr env.motion_file=[Inerst Motion Data]  robot.box_body=False
+python phc/run_hydra.py  exp_name=simxr_aria env=env_simxr_aria learning=im_simxr env.motion_file=[Inerst Motion Data file or folder]  robot.box_body=False
 ```
 
 Train Quest 2 models: 
 
 ```
-python phc/run_hydra.py  exp_name=simxr_quest env=env_simxr_quest learning=im_simxr env.motion_file=[insert synthetic data location]  robot=quest_humanoid
+python phc/run_hydra.py  exp_name=simxr_quest env=env_simxr_quest learning=im_simxr env.motion_file=[insert synthetic data file or folder]  robot=quest_humanoid
 ```
 
 

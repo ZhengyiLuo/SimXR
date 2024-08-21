@@ -12,10 +12,7 @@ import copy
 import cv2
 from multiprocessing import Pool
 import shutil
-
-
-
-
+import argparse
 
 def split_all_files(all_files, data_dir):
     for file in tqdm(all_files):
@@ -52,23 +49,33 @@ def split_all_files(all_files, data_dir):
             joblib.dump(data_entry, osp.join(data_dir, f"{data_split}_seg_motion/{take_key}.pkl"))
 
 
-data_dir = "/hdd2/zen/data/SimXR/syn"
-###################### Splitting data into Segments ######################
-for data_split in ["train", "test"]:
-    all_files = glob.glob(osp.join(data_dir, f"{data_split}/*"))
-    os.makedirs(osp.join(data_dir, f"{data_split}_seg/"), exist_ok=True)
-    os.makedirs(osp.join(data_dir, f"{data_split}_seg_motion/"), exist_ok=True)
 
-    jobs = all_files
-    num_jobs = 10
-    chunk = np.ceil(len(jobs)/num_jobs).astype(int)
-    jobs= [jobs[i:i + chunk] for i in range(0, len(jobs), chunk)]
-    job_args = [(jobs[i], data_dir) for i in range(len(jobs))]
-    print(len(job_args))
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_dir", type=str, default="")
+    args = parser.parse_args()
+    data_dir = args.data_dir
+    ###################### Splitting data into Train and Test ######################
+    train_dir = osp.join(data_dir, f"train/")
+    test_dir = osp.join(data_dir, f"test/")
 
-    try:
-        pool = Pool(num_jobs)   # multi-processing
-        pool.starmap(split_all_files, job_args)
-    except KeyboardInterrupt:
-        pool.terminate()
-        pool.join()
+    ###################### Splitting data into Segments ######################
+    for data_split in ["train", "test"]:
+        all_files = glob.glob(osp.join(data_dir, f"{data_split}/*"))
+        os.makedirs(osp.join(data_dir, f"{data_split}_seg/"), exist_ok=True)
+        os.makedirs(osp.join(data_dir, f"{data_split}_seg_motion/"), exist_ok=True)
+
+
+        jobs = all_files
+        num_jobs = 10
+        chunk = np.ceil(len(jobs)/num_jobs).astype(int)
+        jobs= [jobs[i:i + chunk] for i in range(0, len(jobs), chunk)]
+        job_args = [(jobs[i], data_dir) for i in range(len(jobs))]
+        print(len(job_args))
+
+        try:
+            pool = Pool(num_jobs)   # multi-processing
+            pool.starmap(split_all_files, job_args)
+        except KeyboardInterrupt:
+            pool.terminate()
+            pool.join()
