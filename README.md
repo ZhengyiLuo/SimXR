@@ -1,4 +1,3 @@
-[Repo still under construction]
 
 # Real-Time Simulated Avatar from Head-Mounted Sensors
 
@@ -51,7 +50,7 @@ pip install -r requirement.txt
 Processed Aria sequences can be found here for training and evaluation: [[Train]](https://drive.google.com/drive/folders/1ZsT4sgz3NUmpoMqcR35KJ-hFfuknrVQi?usp=drive_link) [[Test]](https://drive.google.com/drive/folders/10L8tARGzShPwzG1aJM3fPzIxuarEBAKW?usp=drive_link)
 
 ### Quest 2
-Processed real-world sequences can be found here for evaluations: [[Google Drive]](https://drive.google.com/drive/folders/1z6cviNR624UERdi8YrAMCyHbjMitsZO9?usp=sharing)
+Processed real-world sequences can be found here for evaluations: [[Test]](https://drive.google.com/drive/folders/1z6cviNR624UERdi8YrAMCyHbjMitsZO9?usp=sharing)
 
 Processed synthetic sequences can be found here for training: [[Train]](https://drive.google.com/drive/folders/1jMld_d6JmyNkq0w1mBWH5nSts9tsO47b?usp=drive_link) [[Test]](https://drive.google.com/drive/folders/1RACtEleG5saxvjyt1KRe-p0jA4WmAGMS?usp=drive_link)
 

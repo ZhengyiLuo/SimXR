@@ -54,22 +54,8 @@ def split_all_files(all_files, data_dir):
 
 data_dir = "/hdd3/zen/data/SimXR/syn"
 ###################### Splitting data into Train and Test ######################
-sinlges_dir = osp.join(data_dir, "singles")
 train_dir = osp.join(data_dir, f"train/")
 test_dir = osp.join(data_dir, f"test/")
-with open("sample_data/train_syn.txt", "r") as f: train_split = f.read().split("\n")
-with open("sample_data/test_syn.txt", "r") as f: test_split = f.read().split("\n")
-
-os.makedirs(train_dir, exist_ok=True)
-os.makedirs(test_dir, exist_ok=True)
-
-all_files = os.listdir(sinlges_dir)
-for file in tqdm(all_files):
-    if file in train_split:
-        shutil.copy2(osp.join(sinlges_dir, file), osp.join(train_dir, file))
-    elif file in test_split:
-        shutil.copy2(osp.join(sinlges_dir, file), osp.join(test_dir, file))
-        
 
 ###################### Splitting data into Segments ######################
 for data_split in ["train", "test"]:

@@ -59,7 +59,6 @@ for data_split in ["train", "test"]:
     os.makedirs(osp.join(data_dir, f"{data_split}_seg/"), exist_ok=True)
     os.makedirs(osp.join(data_dir, f"{data_split}_seg_motion/"), exist_ok=True)
 
-
     jobs = all_files
     num_jobs = 10
     chunk = np.ceil(len(jobs)/num_jobs).astype(int)
