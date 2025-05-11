@@ -78,7 +78,7 @@ mujoco_joint_names = [
 track_bodies = ['b_head']
 # track_bodies = [ 'L_Knee', "L_Ankle", 'R_Knee', "R_Ankle", 'Head', 'L_Shoulder', 'L_Elbow', 'L_Wrist',  'R_Shoulder', 'R_Elbow', 'R_Wrist']
 track_idx = [mujoco_joint_names.index(i) for i in track_bodies]
-standing_data = joblib.load("/hdd/zen/dev/meta/EgoQuest/data/mmt/pkls/mmt_standing.pkl")
+standing_data = joblib.load("mmt/pkls/mmt_standing.pkl")
 
 standing_key = '0_WIDC170.standing'
 pose_quat_global_default = standing_data[standing_key]['pose_quat_global'][0:1].clone()
