@@ -17,7 +17,7 @@ has_shape_variation: False
 
 masterfoot: False
 freeze_toe: false
-freeze_hand: False
+freeze_hand: FalseN
 box_body: True
 real_weight: True
 real_weight_porpotion_capsules: True
